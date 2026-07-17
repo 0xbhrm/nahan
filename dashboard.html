@@ -962,6 +962,59 @@ proxyip.cmliussss.net" class="w-full px-4 py-3 rounded-xl border border-slate-20
                           </div>
 
                           
+                          <!-- Section: Balancer -->
+                          <div class="bg-[var(--color-surface)]  rounded-2xl border border-slate-200 dark:border-darkborder overflow-hidden" data-accordion="">
+                              <button onclick="toggleAccordion(this)" class="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                  <div class="flex items-center gap-3">
+                                      <span class="text-lg">📡</span>
+                                      <span class="text-sm font-bold text-slate-700 dark:text-white">Balancer</span>
+                                  </div>
+                                  <svg class="w-4 h-4 text-slate-400 transform transition-transform duration-200 accordion-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                              </button>
+                              <div data-accordion-content="" class="transition-all duration-300" style="max-height:0;overflow:hidden;visibility:hidden">
+                                  <div class="space-y-4 px-5 pb-5 pt-1">
+                                      <label class="flex items-center justify-between cursor-pointer bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl">
+                                          <div>
+                                              <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Enable Balancer</span>
+                                              <p class="text-[10px] text-slate-400 mt-0.5">Pings your IP pool every 1 minute and automatically pushes the fastest IPs into "Clean IPs" for the subscription link.</p>
+                                          </div>
+                                          <div class="relative inline-flex items-center cursor-pointer">
+                                              <input type="checkbox" id="cfg-balancer-enabled" class="sr-only peer">
+                                              <div class="w-11 h-6 bg-slate-300 dark:bg-slate-600 rounded-full peer peer-checked:after:translate-x-5 rtl:peer-checked:after:-translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-[var(--color-surface)] after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-500 peer-checked:bg-primary"></div>
+                                          </div>
+                                      </label>
+                                      <div id="balancer-options-wrap" class="space-y-4 hidden">
+                                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                              <div class="space-y-1">
+                                                  <label class="block text-sm font-bold text-slate-600 dark:text-slate-300">Config Count (Top N)</label>
+                                                  <select id="cfg-balancer-num" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-darkborder bg-slate-50 dark:bg-slate-800 focus:border-primary outline-none appearance-none">
+                                                      <option value="1">1</option>
+                                                      <option value="2">2</option>
+                                                      <option value="3">3</option>
+                                                  </select>
+                                                  <p class="text-[10px] text-slate-400 mt-1">The fastest N IPs (by ping) are selected each round.</p>
+                                              </div>
+                                              <div class="space-y-1">
+                                                  <label class="block text-sm font-bold text-slate-600 dark:text-slate-300">Port</label>
+                                                  <input type="text" id="cfg-balancer-port" placeholder="443" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-darkborder bg-slate-50 dark:bg-slate-800 focus:border-primary outline-none text-sm">
+                                              </div>
+                                          </div>
+                                          <div class="space-y-1">
+                                              <label class="block text-sm font-bold text-slate-600 dark:text-slate-300">IPv4 Pool (One per line)</label>
+                                              <textarea id="cfg-balancer-ips" rows="4" placeholder="1.2.3.4
+5.6.7.8
+9.10.11.12" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-darkborder bg-slate-50 dark:bg-slate-800 focus:border-primary focus:ring-1 outline-none font-mono text-sm resize-none"></textarea>
+                                              <p class="text-xs text-slate-400 mt-2">Each IP is TCP-pinged on the port above every 1 minute. The fastest <span id="balancer-num-hint">3</span> are written to "Clean IPs" automatically. You can list more IPs than the Config Count above — only the fastest ones are kept each round.</p>
+                                          </div>
+                                          <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 text-xs text-amber-700 dark:text-amber-300 leading-relaxed flex gap-2">
+                                              <span>⚠️</span>
+                                              <span>While enabled, Balancer will overwrite the "Clean IPs" field in the Network &amp; DNS section automatically every minute. This requires a Cron Trigger (<code class="bg-black/10 dark:bg-white/10 px-1 rounded">* * * * *</code>) configured for this Worker in the Cloudflare dashboard — without it, the balancer only runs once right after you save.</span>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+
                           <!-- Section: Custom Routing -->
                           <div class="bg-[var(--color-surface)]  rounded-2xl border border-slate-200 dark:border-darkborder overflow-hidden" data-accordion="">
                               <button onclick="toggleAccordion(this)" class="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
@@ -2845,6 +2898,10 @@ proxyip.cmliussss.net" class="w-full px-4 py-3 rounded-xl border border-slate-20
                   githubRepo: el('cfg-github-repo').value,
                   subUserAgent: el('cfg-sub-ua').value,
                   customPanelUrl: el('cfg-custom-panel-url').value,
+                  balancerEnabled: el('cfg-balancer-enabled') ? el('cfg-balancer-enabled').checked : false,
+                  balancerConfigNum: el('cfg-balancer-num') ? parseInt(el('cfg-balancer-num').value, 10) : 3,
+                  balancerIps: el('cfg-balancer-ips') ? el('cfg-balancer-ips').value : '',
+                  balancerPort: el('cfg-balancer-port') ? (el('cfg-balancer-port').value.trim() || '443') : '443',
                   fakeConfigs: getFakeConfigsFromUI(),
                   linkedPanels: (window.nahanConfig && Array.isArray(window.nahanConfig.linkedPanels)) ? window.nahanConfig.linkedPanels : []
               };
@@ -2889,6 +2946,18 @@ proxyip.cmliussss.net" class="w-full px-4 py-3 rounded-xl border border-slate-20
                       mapId('cfg-github-repo', conf.githubRepo);
                       mapId('cfg-sub-ua', conf.subUserAgent);
                       mapId('cfg-custom-panel-url', conf.customPanelUrl);
+                      if (document.getElementById('cfg-balancer-enabled')) {
+                          document.getElementById('cfg-balancer-enabled').checked = conf.balancerEnabled || false;
+                          const bWrap = document.getElementById('balancer-options-wrap');
+                          if (bWrap) bWrap.classList.toggle('hidden', !conf.balancerEnabled);
+                      }
+                      if (document.getElementById('cfg-balancer-num')) {
+                          document.getElementById('cfg-balancer-num').value = conf.balancerConfigNum || 3;
+                          const hint = document.getElementById('balancer-num-hint');
+                          if (hint) hint.textContent = conf.balancerConfigNum || 3;
+                      }
+                      if (document.getElementById('cfg-balancer-port')) document.getElementById('cfg-balancer-port').value = conf.balancerPort || '443';
+                      if (document.getElementById('cfg-balancer-ips')) document.getElementById('cfg-balancer-ips').value = conf.balancerIps || '';
 
                       if (conf.enableOpt1 !== undefined) document.getElementById('cfg-tfo').checked = conf.enableOpt1;
                       if (conf.enableOpt2 !== undefined) document.getElementById('cfg-ech').checked = conf.enableOpt2;
@@ -3056,6 +3125,18 @@ proxyip.cmliussss.net" class="w-full px-4 py-3 rounded-xl border border-slate-20
                       document.getElementById('cfg-name-prefix').value = conf.namePrefix || 'Core';
                       document.getElementById('cfg-sub-ua').value = conf.subUserAgent || '';
                       document.getElementById('cfg-custom-panel-url').value = conf.customPanelUrl || '';
+                      if (document.getElementById('cfg-balancer-enabled')) {
+                          document.getElementById('cfg-balancer-enabled').checked = conf.balancerEnabled || false;
+                          const bWrap = document.getElementById('balancer-options-wrap');
+                          if (bWrap) bWrap.classList.toggle('hidden', !conf.balancerEnabled);
+                      }
+                      if (document.getElementById('cfg-balancer-num')) {
+                          document.getElementById('cfg-balancer-num').value = conf.balancerConfigNum || 3;
+                          const hint = document.getElementById('balancer-num-hint');
+                          if (hint) hint.textContent = conf.balancerConfigNum || 3;
+                      }
+                      if (document.getElementById('cfg-balancer-port')) document.getElementById('cfg-balancer-port').value = conf.balancerPort || '443';
+                      if (document.getElementById('cfg-balancer-ips')) document.getElementById('cfg-balancer-ips').value = conf.balancerIps || '';
                       renderFakeConfigs(conf.fakeConfigs || [
                           { name: "📊 {usage}", enabled: true },
                           { name: "📅 {expiry}", enabled: true }
@@ -3083,6 +3164,20 @@ proxyip.cmliussss.net" class="w-full px-4 py-3 rounded-xl border border-slate-20
                           autoUpdateEl.addEventListener('change', () => {
                               const wrap = document.getElementById('auto-update-format-wrap');
                               if (wrap) wrap.classList.toggle('hidden', !autoUpdateEl.checked);
+                          });
+                      }
+                      const balancerEl = document.getElementById('cfg-balancer-enabled');
+                      if (balancerEl) {
+                          balancerEl.addEventListener('change', () => {
+                              const bWrap = document.getElementById('balancer-options-wrap');
+                              if (bWrap) bWrap.classList.toggle('hidden', !balancerEl.checked);
+                          });
+                      }
+                      const balancerNumEl = document.getElementById('cfg-balancer-num');
+                      if (balancerNumEl) {
+                          balancerNumEl.addEventListener('change', () => {
+                              const hint = document.getElementById('balancer-num-hint');
+                              if (hint) hint.textContent = balancerNumEl.value;
                           });
                       }
                 const pCont = document.getElementById('dyn-profiles-container');
@@ -3175,6 +3270,10 @@ proxyip.cmliussss.net" class="w-full px-4 py-3 rounded-xl border border-slate-20
                       customPanelUrl: el('cfg-custom-panel-url').value,
                       nameStrategy: el('cfg-name-strategy').value,
                       namePrefix: el('cfg-name-prefix').value,
+                      balancerEnabled: el('cfg-balancer-enabled') ? el('cfg-balancer-enabled').checked : false,
+                      balancerConfigNum: el('cfg-balancer-num') ? parseInt(el('cfg-balancer-num').value, 10) : 3,
+                      balancerIps: el('cfg-balancer-ips') ? el('cfg-balancer-ips').value : '',
+                      balancerPort: el('cfg-balancer-port') ? (el('cfg-balancer-port').value.trim() || '443') : '443',
                       fakeConfigs: getFakeConfigsFromUI(),
                       slaveNodes: '',
                       linkedPanels: (window.nahanConfig && Array.isArray(window.nahanConfig.linkedPanels)) ? window.nahanConfig.linkedPanels : []
